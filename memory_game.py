@@ -20,7 +20,12 @@ cartas_seleccionadas = []
 # Función para iniciar el juego con la configuración seleccionada
 def iniciar_juego():
     global baraja, tablero, cartas_volteadas, cartas_seleccionadas, puntos, turno
-
+    if not entrada_jugadores.get():
+        messagebox.showerror("Error", "The number of players is required.")
+        return
+    if not entrada_jugadores.get().isdigit():
+        messagebox.showerror("Error", "The number of players must be an number.")
+        return
     # Reiniciar puntos y turno
     puntos = {}
     turno = 1
@@ -28,9 +33,6 @@ def iniciar_juego():
     # Reiniciar cartas seleccionadas y volteadas
     cartas_volteadas = 0
     cartas_seleccionadas = []
-
-    # Obtener la cantidad de jugadores
-    num_jugadores = int(entrada_jugadores.get())
 
     # Cambiar la lista de imágenes según la temática seleccionada
     if var_tematica.get() == 1:
@@ -42,6 +44,7 @@ def iniciar_juego():
     elif var_tematica.get() == 3:
         # Videojuegos
         baraja = [f"assets/videojuego{i}.png" for i in range(1, 11)]
+    
     if var_juego.get() == 3:
         # Si el jugador eligió tríos, agregar tres copias de cada carta a la baraja
         cartas_unicas = list(set(baraja))
@@ -64,7 +67,7 @@ def mostrar_tablero():
     global baraja, tablero, botones
     # Ocultar la ventana de opciones
     menu_frame.grid_forget()
-
+    ventana.resizable(False, False)
     # Mostrar el tablero de juego
     ventana.deiconify() 
     # Determinar el tamaño del tablero según la elección del jugador
@@ -73,7 +76,7 @@ def mostrar_tablero():
     tablero = [[' ' for _ in range(columnas)] for _ in range(filas)]
 
     # Crear un Label para mostrar el contador de puntos y el turno
-    puntos_label.config(text=f"Turno del Jugador {turno} - Puntos: {puntos.get(turno, 0)}")
+    puntos_label.config(text=f"Player #{turno} turn - Points: {puntos.get(turno, 0)}")
 
     # Crear los botones del tablero
     botones = []
@@ -135,7 +138,7 @@ def contar_cartas():
 def actualizar_puntos():
     global puntos, turno
     puntos[turno] = puntos.get(turno, 0) + 1
-    puntos_label.config(text=f"Turno del Jugador {turno} - Puntos: {puntos.get(turno, 0)}")
+    puntos_label.config(text=f"Player #{turno} turn - Points: {puntos.get(turno, 0)}")
 # Función para manejar el clic en un botón
 def verificar_cartas():
     global cartas_volteadas, cartas_seleccionadas, cartas_acertadas, turno
@@ -167,7 +170,7 @@ def verificar_cartas():
         
         # Cambiar el turno al siguiente jugador
         turno = (turno % int(entrada_jugadores.get())) + 1
-        puntos_label.config(text=f"Turno del Jugador {turno} - Puntos: {puntos.get(turno, 0)}")
+        puntos_label.config(text=f"Player #{turno} turn - Points: {puntos.get(turno, 0)}")
 
 
 # Función para manejar el clic en un botón
@@ -183,7 +186,7 @@ def manejar_clic(fila, columna):
         cartas_volteadas += 1
         cartas_seleccionadas.append((fila, columna))
         if cartas_volteadas == var_juego.get():
-            ventana.after(500, verificar_cartas)
+            ventana.after(1000, verificar_cartas)
             for fila, columna in cartas_seleccionadas:
                 botones[fila][columna].config(state=tk.NORMAL)  # Habilitar el botón nuevamente
 def mostrar_mensaje_ganador(jugador_ganador, puntos_ganador):
@@ -197,14 +200,15 @@ def mostrar_mensaje_ganador(jugador_ganador, puntos_ganador):
 
     # Crea una ventana para mostrar el mensaje de fin de juego
     mensaje_ventana = tk.Toplevel(ventana)
-    mensaje_ventana.title("Fin del Juego")
+    mensaje_ventana.resizable(False, False)
+    mensaje_ventana.title("Game Over")
 
     if empate:
         # Si hay empate, muestra un mensaje indicando el empate
-        mensaje_label = tk.Label(mensaje_ventana, text="¡Es un empate! Todos los jugadores tienen la misma puntuación.")
+        mensaje_label = tk.Label(mensaje_ventana, text="It's a tie! There's no winner.")
     else:
         # Si no hay empate, muestra el mensaje del ganador
-        mensaje_label = tk.Label(mensaje_ventana, text=f"¡Jugador {jugador_ganador} es el ganador con {puntos_ganador} puntos!")
+        mensaje_label = tk.Label(mensaje_ventana, text=f"Player {jugador_ganador} wins with {puntos_ganador} points!")
 
     mensaje_label.pack()
 
@@ -213,11 +217,11 @@ def mostrar_mensaje_ganador(jugador_ganador, puntos_ganador):
     botones_frame.pack()
 
     # Agrega el botón de reinicio
-    reiniciar_button = tk.Button(botones_frame, text="Reiniciar Juego", command=reiniciar_juego)
+    reiniciar_button = tk.Button(botones_frame, text="Restart game", command=reiniciar_juego)
     reiniciar_button.pack(side=tk.LEFT)
 
     # Agrega el botón de cerrar
-    cerrar_button = tk.Button(botones_frame, text="Cerrar Juego", command=cerrar_juego)
+    cerrar_button = tk.Button(botones_frame, text="Close game", command=cerrar_juego)
     cerrar_button.pack(side=tk.RIGHT)
 
     # Muestra la ventana del mensaje del ganador
@@ -250,12 +254,13 @@ def reiniciar_juego():
 
 def cerrar_juego():
     ventana.destroy()
+    
 # Crear la ventana principal
 ventana = tk.Tk()
-ventana.title("Juego de Memoria")
-
+ventana.title("Memory game")
+ventana.resizable(False, False)
 # Crear un Label para mostrar el contador de puntos
-puntos_label = tk.Label(ventana, text="Puntos: 0")
+puntos_label = tk.Label(ventana, text="Points: 0")
 puntos_label.grid(row=0, column=0, columnspan=5, sticky="n")
 
 back_image = Image.open("assets/carta_cerrada.png")
@@ -267,40 +272,40 @@ menu_frame = tk.Frame(ventana)
 menu_frame.grid(row=0, column=0, columnspan=5)
 
 # Etiqueta para elegir el tipo de juego
-tk.Label(menu_frame, text="Seleccione el tipo de juego:").pack()
+tk.Label(menu_frame, text="Select the number of cards to match:").pack()
 
 # Variable para almacenar la elección del jugador (parejas o tríos)
 var_juego = tk.IntVar()
 var_juego.set(2)  # Inicialmente, seleccionar tríos por defecto
 
 # Botones de radio para seleccionar el tipo de juego
-tk.Radiobutton(menu_frame, text="Parejas", variable=var_juego, value=2).pack()
-tk.Radiobutton(menu_frame, text="Tríos", variable=var_juego, value=3).pack()
+tk.Radiobutton(menu_frame, text="Pairs", variable=var_juego, value=2).pack()
+tk.Radiobutton(menu_frame, text="Triplets", variable=var_juego, value=3).pack()
 
 # Etiqueta para elegir la temática
-tk.Label(menu_frame, text="Seleccione la temática:").pack()
+tk.Label(menu_frame, text="Select the theme:").pack()
 
 # Variable para almacenar la elección del jugador (frutas, deportes o videojuegos)
 var_tematica = tk.IntVar()
 var_tematica.set(1)  # Inicialmente, seleccionar frutas por defecto
 
 # Botones de radio para seleccionar la temática
-tk.Radiobutton(menu_frame, text="Frutas", variable=var_tematica, value=1).pack()
-tk.Radiobutton(menu_frame, text="Deportes", variable=var_tematica, value=2).pack()
-tk.Radiobutton(menu_frame, text="Videojuegos", variable=var_tematica, value=3).pack()
+tk.Radiobutton(menu_frame, text="Fruits", variable=var_tematica, value=1).pack()
+tk.Radiobutton(menu_frame, text="Sports", variable=var_tematica, value=2).pack()
+tk.Radiobutton(menu_frame, text="Videogames", variable=var_tematica, value=3).pack()
 
 # Etiqueta para ingresar la cantidad de jugadores
-tk.Label(menu_frame, text="Ingrese la cantidad de jugadores:").pack()
+tk.Label(menu_frame, text="Enter the number of players:").pack()
 entrada_jugadores = tk.Entry(menu_frame)
 entrada_jugadores.pack()
 
-reiniciar_button = tk.Button(menu_frame, text="Reiniciar Juego", command=reiniciar_juego)
-cerrar_button = tk.Button(menu_frame, text="Cerrar Juego", command=cerrar_juego)
+reiniciar_button = tk.Button(menu_frame, text="Restart game", command=reiniciar_juego)
+cerrar_button = tk.Button(menu_frame, text="Close game", command=cerrar_juego)
 reiniciar_button.pack_forget()
 cerrar_button.pack_forget()
 
 # Botón para iniciar el juego con la configuración seleccionada
-tk.Button(menu_frame, text="Iniciar Juego", command=iniciar_juego).pack()
+tk.Button(menu_frame, text="Start game", command=iniciar_juego).pack()
 
 # Mostrar la ventana principal
 ventana.mainloop()
